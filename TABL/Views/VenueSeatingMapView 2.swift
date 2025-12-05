@@ -15,7 +15,11 @@ struct VenueSeatingMapView: View {
     @State private var tables: [VenueTable] = []
     @State private var hoverLocation: CGPoint = .zero
     
-    init() {
+    // Callback to notify when a table is purchased
+    let onTablePurchased: ((Int) -> Void)?
+    
+    init(onTablePurchased: ((Int) -> Void)? = nil) {
+        self.onTablePurchased = onTablePurchased
         _tables = State(initialValue: createTablesFromImage())
     }
     
@@ -95,12 +99,12 @@ struct VenueSeatingMapView: View {
         
         // Top row tables (adjust positions based on your image)
         let topTables = [
-            (number: 21, x: 0.2, y: 0.15, price: 1200.0),
-            (number: 22, x: 0.3, y: 0.15, price: 1300.0),
-            (number: 23, x: 0.4, y: 0.15, price: 1400.0),
-            (number: 24, x: 0.5, y: 0.15, price: 1500.0),
-            (number: 25, x: 0.6, y: 0.15, price: 1300.0),
-            (number: 26, x: 0.7, y: 0.15, price: 1200.0)
+            (number: 26, x: 0.25, y: 0.37, price: 1200.0),
+            (number: 25, x: 0.36, y: 0.37, price: 1300.0),
+            (number: 24, x: 0.50, y: 0.37, price: 1400.0),
+            (number: 23, x: 0.58, y: 0.37, price: 1500.0),
+            (number: 22, x: 0.68, y: 0.37, price: 1300.0),
+            (number: 21, x: 0.76, y: 0.37, price: 1200.0)
         ]
         
         for table in topTables {
@@ -115,12 +119,12 @@ struct VenueSeatingMapView: View {
         
         // Middle row tables
         let middleTables = [
-            (number: 11, x: 0.2, y: 0.35, price: 900.0),
-            (number: 12, x: 0.3, y: 0.35, price: 950.0),
-            (number: 13, x: 0.4, y: 0.35, price: 1000.0),
-            (number: 14, x: 0.5, y: 0.35, price: 1000.0),
-            (number: 15, x: 0.6, y: 0.35, price: 950.0),
-            (number: 16, x: 0.7, y: 0.35, price: 900.0)
+            (number: 16, x: 0.33, y: 0.43, price: 900.0),
+            (number: 15, x: 0.4, y: 0.43, price: 950.0),
+            (number: 14, x: 0.48, y: 0.43, price: 1000.0),
+            (number: 13, x: 0.56, y: 0.43, price: 1000.0),
+            (number: 12, x: 0.63, y: 0.43, price: 950.0),
+            (number: 11, x: 0.7, y: 0.43, price: 900.0)
         ]
         
         for table in middleTables {
@@ -135,9 +139,9 @@ struct VenueSeatingMapView: View {
         
         // Bottom tables
         let bottomTables = [
-            (number: 1, x: 0.7, y: 0.75, price: 600.0),
-            (number: 2, x: 0.5, y: 0.75, price: 650.0),
-            (number: 3, x: 0.3, y: 0.75, price: 600.0)
+            (number: 1, x: 0.75, y: 0.56, price: 600.0),
+            (number: 2, x: 0.57, y: 0.56, price: 650.0),
+            (number: 3, x: 0.3, y: 0.56, price: 600.0)
         ]
         
         for table in bottomTables {
@@ -151,8 +155,8 @@ struct VenueSeatingMapView: View {
         }
         
         // Side tables
-        allTables.append(VenueTable(number: 17, position: CGPoint(x: 0.1, y: 0.4), price: 700, isBooked: false, capacity: 4))
-        allTables.append(VenueTable(number: 4, position: CGPoint(x: 0.1, y: 0.6), price: 500, isBooked: false, capacity: 4))
+        allTables.append(VenueTable(number: 17, position: CGPoint(x: 0.11, y: 0.46), price: 700, isBooked: false, capacity: 4))
+        allTables.append(VenueTable(number: 4, position: CGPoint(x: 0.11, y: 0.55), price: 500, isBooked: false, capacity: 4))
         
         return allTables
     }
@@ -163,6 +167,9 @@ struct VenueSeatingMapView: View {
                 tables[index].isBooked = true
             }
             selectedTable = nil
+            
+            // Notify the parent view about the purchase
+            onTablePurchased?(table.number)
         }
     }
 }
@@ -176,12 +183,18 @@ struct InteractiveTableArea: View {
     
     var body: some View {
         Circle()
-            .fill(Color.clear)
-            .frame(width: 40, height: 40)
+            .fill(table.isBooked ? Color.red.opacity(0.6) : Color.blue.opacity(0.6))
+            .frame(width: 20, height: 20)
             .overlay(
                 Circle()
-                    .stroke(isHovered ? Color.yellow : Color.clear, lineWidth: 3)
+                    .stroke(isHovered ? Color.yellow : Color.white, lineWidth: 2)
                     .scaleEffect(isHovered ? 1.2 : 1.0)
+            )
+            .overlay(
+                Text("\(table.number)")
+                    .font(.system(size: 8))
+                    .bold()
+                    .foregroundColor(.white)
             )
             .scaleEffect(isSelected ? 1.3 : 1.0)
     }

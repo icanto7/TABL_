@@ -13,6 +13,12 @@ import MapKit
 
 //To-do add location
 
+struct TablePrice: Identifiable {
+    let id = UUID()
+    var tableNumber: String
+    var price: String
+}
+
 struct ClubDetailView: View {
     @FirestoreQuery(collectionPath: "clubs") var fsPhotos: [Photo]
     @State var club: Club
@@ -21,6 +27,10 @@ struct ClubDetailView: View {
     @State private var photoSheetIsPresented = false
     @State private var showingAlert = false // Alert user if they need to save Place before adding a Photo
     @State private var alertMessage = "Cannot add a Photo until you save the Place."
+    @State private var showTableMapSheet = false
+    @State private var tableNumber = ""
+    @State private var tablePrice = ""
+    @State private var tablePrices: [TablePrice] = []
     private var photos: [Photo] {
         if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
             return[Photo.preview, Photo.preview, Photo.preview, Photo.preview, Photo.preview]
@@ -130,9 +140,94 @@ struct ClubDetailView: View {
                     .foregroundColor(.black)
                 }
                 .bold()
-                .padding(.bottom)
                 .tint(.white)
                 .buttonStyle(.glassProminent)
+                
+                Button {
+                    showTableMapSheet.toggle()
+                } label: {
+                    HStack {
+                        Image(systemName: "map")
+                        Text("Add Table Map")
+                    }
+                    .foregroundColor(.black)
+                }
+                .bold()
+                .padding(.top, 8)
+                .tint(.white)
+                .buttonStyle(.glassProminent)
+                
+                // Table Pricing Section
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Table Pricing:")
+                        .bold()
+                        .foregroundColor(.white)
+                        .padding(.top)
+                    
+                    // Add new table row
+                    HStack(spacing: 12) {
+                        TextField("Table #", text: $tableNumber)
+                            .padding()
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(Color.white, lineWidth: 1)
+                            )
+                            .background(Color.clear)
+                            .foregroundColor(.white)
+                            .colorScheme(.dark)
+                            .keyboardType(.numberPad)
+                        
+                        TextField("Price ($)", text: $tablePrice)
+                            .padding()
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(Color.white, lineWidth: 1)
+                            )
+                            .background(Color.clear)
+                            .foregroundColor(.white)
+                            .colorScheme(.dark)
+                            .keyboardType(.decimalPad)
+                        
+                        Button {
+                            addTablePrice()
+                        } label: {
+                            Image(systemName: "plus.circle.fill")
+                                .foregroundColor(.white)
+                                .font(.title2)
+                        }
+                        .disabled(tableNumber.isEmpty || tablePrice.isEmpty)
+                    }
+                    
+                    // Display existing table prices
+                    if !tablePrices.isEmpty {
+                        VStack(spacing: 8) {
+                            ForEach(tablePrices) { tablePrice in
+                                HStack {
+                                    Text("Table \(tablePrice.tableNumber)")
+                                        .foregroundColor(.white)
+                                    
+                                    Spacer()
+                                    
+                                    Text("$\(tablePrice.price)")
+                                        .foregroundColor(.green)
+                                        .bold()
+                                    
+                                    Button {
+                                        removeTablePrice(tablePrice)
+                                    } label: {
+                                        Image(systemName: "trash")
+                                            .foregroundColor(.red)
+                                    }
+                                }
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 8)
+                                .background(Color.gray.opacity(0.2))
+                                .cornerRadius(8)
+                            }
+                        }
+                    }
+                }
+                .padding(.bottom)
                 
                 Map(position: .constant(mapCameraPosition)) {
                     Marker(club.name, coordinate: CLLocationCoordinate2D(latitude: club.latitue, longitude: club.longuitude))
@@ -217,7 +312,40 @@ struct ClubDetailView: View {
         }) {
             PhotoView(club: club)
         }
-
+        .sheet(isPresented: $showTableMapSheet) {
+            NavigationStack {
+                VenueSeatingMapView()
+                    .navigationTitle("Table Map Preview")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .navigationBarBackButtonHidden()
+                    .toolbar {
+                        ToolbarItem(placement: .navigationBarTrailing) {
+                            Button("Done") {
+                                showTableMapSheet = false
+                            }
+                            .foregroundColor(.white)
+                        }
+                    }
+                    .toolbarBackground(Color.black, for: .navigationBar)
+                    .toolbarColorScheme(.dark, for: .navigationBar)
+            }
+            .preferredColorScheme(.dark)
+        }
+    }
+    
+    func addTablePrice() {
+        guard !tableNumber.isEmpty && !tablePrice.isEmpty else { return }
+        
+        let newTablePrice = TablePrice(tableNumber: tableNumber, price: tablePrice)
+        tablePrices.append(newTablePrice)
+        
+        // Clear the input fields
+        tableNumber = ""
+        tablePrice = ""
+    }
+    
+    func removeTablePrice(_ tablePrice: TablePrice) {
+        tablePrices.removeAll { $0.id == tablePrice.id }
     }
     func loadFirstPhoto() async {
         guard let clubId = club.id else {

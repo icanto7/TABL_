@@ -21,6 +21,11 @@ struct UserClubDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var showReviewViewSheet = false
     @State private var showPhotoGallery = false
+    @State private var showCalendar = false
+    @State private var showSeatingMap = false
+    @State private var reservedTableNumber: Int? = nil
+    @State private var reservedDate: Date? = nil
+    @State private var selectedDate = Date()
     @State private var photo: Photo? // Holds the first photo from the subcollection
     @EnvironmentObject private var favoritesManager: FavoritesManager
     private var photos: [Photo] {
@@ -114,43 +119,58 @@ struct UserClubDetailView: View {
                         .buttonStyle(.plain)
                     }
                     
+                    // Table Plan Chart Image
+                    VStack(spacing: 8) {
+                        HStack {
+                            Text("Table Map")
+                                .font(.headline)
+                                .foregroundColor(.white)
+                                .bold()
+                            Spacer()
+                        }
+                        
+                        Image("Sound-Table-Chart-24")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(maxWidth: .infinity, maxHeight: 300)
+                            .cornerRadius(12)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(Color.white.opacity(0.3), lineWidth: 1)
+                            )
+                    }
+                    
                     if !club.link.isEmpty {
-                        Button(action: {
-                            openLink()
-                        }) {
-                            HStack {
-                                Text("Reserve A Table Now!")
+                        VStack(spacing: 8) {
+                            Button(action: {
+                                showCalendar = true
+                            }) {
+                                HStack {
+                                    Text(reservedTableNumber != nil ? "Edit Table Selection" : "Reserve A Table Now!")
+                                }
+                                .foregroundColor(.black)
+                                .padding(.vertical, 8)
+                                .padding(.horizontal, 12)
+                                .background(Color.white)
+                                .cornerRadius(8)
                             }
-                            .foregroundColor(.black)
-                            .padding(.vertical, 8)
-                            .padding(.horizontal, 12)
-                            .background(Color.white)
-                            .cornerRadius(8)
+                            
+                            // Show reserved table info if table is booked
+                            if let tableNumber = reservedTableNumber, let date = reservedDate {
+                                VStack(spacing: 4) {
+                                    Text("Reserved: Table \(tableNumber)")
+                                        .font(.caption)
+                                        .foregroundColor(.green)
+                                        .bold()
+                                    Text("Date: \(date, format: .dateTime.weekday().month().day().year())")
+                                        .font(.caption)
+                                        .foregroundColor(.green)
+                                }
+                            }
                         }
                     }
                     
-                    Map(position: .constant(mapCameraPosition)) {
-                        Marker(club.name, coordinate: CLLocationCoordinate2D(latitude: club.latitue, longitude: club.longuitude))
-                            .tint(.white)
-                        
-                        UserAnnotation()
-                    }
-                    .mapStyle(.standard(elevation: .flat, pointsOfInterest: .excludingAll, showsTraffic: false))
-                    .mapControls {
-                        MapUserLocationButton()
-                            .mapControlVisibility(.hidden)
-                        MapCompass()
-                            .mapControlVisibility(.hidden)
-                    }
-                    .colorScheme(.dark)
-                    .frame(height: 250)
-                    .cornerRadius(12)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(Color.white.opacity(0.3), lineWidth: 1)
-                    )
-                    
-                    // Reviews Section
+                    // Reviews Section (moved above map)
                     VStack(alignment: .leading, spacing: 12) {
                         HStack {
                             Text("Avg. Rating:")
@@ -206,6 +226,27 @@ struct UserClubDetailView: View {
                             }
                         }
                     }
+                    
+                    Map(position: .constant(mapCameraPosition)) {
+                        Marker(club.name, coordinate: CLLocationCoordinate2D(latitude: club.latitue, longitude: club.longuitude))
+                            .tint(.white)
+                        
+                        UserAnnotation()
+                    }
+                    .mapStyle(.standard(elevation: .flat, pointsOfInterest: .excludingAll, showsTraffic: false))
+                    .mapControls {
+                        MapUserLocationButton()
+                            .mapControlVisibility(.hidden)
+                        MapCompass()
+                            .mapControlVisibility(.hidden)
+                    }
+                    .colorScheme(.dark)
+                    .frame(height: 250)
+                    .cornerRadius(12)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Color.white.opacity(0.3), lineWidth: 1)
+                    )
                 }
                 .padding(.horizontal)
             }
@@ -246,6 +287,7 @@ struct UserClubDetailView: View {
                     
                     ScrollView {
                         VStack(spacing: 12) {
+                            // Club photos from Firestore
                             ForEach(photos) { photo in
                                 let url = URL(string: photo.imageURLString)
                                 AsyncImage(url: url) { image in
@@ -272,6 +314,91 @@ struct UserClubDetailView: View {
                     ToolbarItem(placement: .navigationBarTrailing) {
                         Button("Done") {
                             showPhotoGallery = false
+                        }
+                        .foregroundColor(.white)
+                    }
+                }
+                .toolbarBackground(Color.black, for: .navigationBar)
+                .toolbarColorScheme(.dark, for: .navigationBar)
+            }
+            .preferredColorScheme(.dark)
+        }
+        .sheet(isPresented: $showCalendar) {
+            NavigationStack {
+                ZStack {
+                    Color.black
+                        .ignoresSafeArea()
+                    
+                    VStack(spacing: 24) {
+                        Text("Select Reservation Date")
+                            .font(.title2)
+                            .bold()
+                            .foregroundColor(.white)
+                            .padding(.top)
+                        
+                        DatePicker(
+                            "Reservation Date",
+                            selection: $selectedDate,
+                            in: Date()...,
+                            displayedComponents: .date
+                        )
+                        .datePickerStyle(.graphical)
+                        .colorScheme(.dark)
+                        .padding()
+                        
+                        Button("Continue to Table Selection") {
+                            showCalendar = false
+                            showSeatingMap = true
+                        }
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .background(Color.white)
+                        .foregroundColor(.black)
+                        .cornerRadius(12)
+                        .bold()
+                        .padding(.horizontal)
+                        
+                        Spacer()
+                    }
+                }
+                .navigationTitle("Select Date")
+                .navigationBarTitleDisplayMode(.inline)
+                .navigationBarBackButtonHidden()
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        Button("Cancel") {
+                            showCalendar = false
+                        }
+                        .foregroundColor(.white)
+                    }
+                }
+                .toolbarBackground(Color.black, for: .navigationBar)
+                .toolbarColorScheme(.dark, for: .navigationBar)
+            }
+            .preferredColorScheme(.dark)
+        }
+        .sheet(isPresented: $showSeatingMap) {
+            NavigationStack {
+                VenueSeatingMapView { tableNumber in
+                    // Handle table purchase
+                    reservedTableNumber = tableNumber
+                    reservedDate = selectedDate
+                    showSeatingMap = false
+                }
+                .navigationTitle("\(club.name) - Seating")
+                .navigationBarTitleDisplayMode(.inline)
+                .navigationBarBackButtonHidden()
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        Button("Back") {
+                            showSeatingMap = false
+                            showCalendar = true
+                        }
+                        .foregroundColor(.white)
+                    }
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button("Done") {
+                            showSeatingMap = false
                         }
                         .foregroundColor(.white)
                     }
