@@ -79,10 +79,11 @@ struct UserClubDetailView: View {
                     
                     // Photo Gallery Preview
                     if !photos.isEmpty {
-                        Button(action: {
-                            showPhotoGallery = true
-                        }) {
-                            ZStack {
+                        ZStack {
+                            // Main photo that opens gallery
+                            Button(action: {
+                                showPhotoGallery = true
+                            }) {
                                 let url = URL(string: photos[0].imageURLString)
                                 AsyncImage(url: url) { image in
                                     image
@@ -96,27 +97,28 @@ struct UserClubDetailView: View {
                                         .tint(.white)
                                         .frame(height: 300)
                                 }
-                                
-                                // Photo count badge
-                                VStack {
-                                    HStack {
-                                        Spacer()
-                                        Text("\(photos.count)")
-                                            .font(.headline)
-                                            .fontWeight(.bold)
-                                            .foregroundColor(.black)
-                                            .padding(.horizontal, 12)
-                                            .padding(.vertical, 6)
-                                            .background(Color.white.opacity(0.9))
-                                            .cornerRadius(20)
-                                            .padding(.trailing, 12)
-                                            .padding(.top, 12)
-                                    }
-                                    Spacer()
-                                }
                             }
+                            .buttonStyle(.plain)
+                            
+                            // Photo count badge (non-clickable overlay)
+                            VStack {
+                                HStack {
+                                    Spacer()
+                                    Text("\(photos.count)")
+                                        .font(.headline)
+                                        .fontWeight(.bold)
+                                        .foregroundColor(.black)
+                                        .padding(.horizontal, 12)
+                                        .padding(.vertical, 6)
+                                        .background(Color.white.opacity(0.9))
+                                        .cornerRadius(20)
+                                        .padding(.trailing, 12)
+                                        .padding(.top, 12)
+                                }
+                                Spacer()
+                            }
+                            .allowsHitTesting(false) // This prevents the badge from intercepting taps
                         }
-                        .buttonStyle(.plain)
                     }
                     
                     // Table Plan Chart Image
@@ -140,32 +142,30 @@ struct UserClubDetailView: View {
                             )
                     }
                     
-                    if !club.link.isEmpty {
-                        VStack(spacing: 8) {
-                            Button(action: {
-                                showCalendar = true
-                            }) {
-                                HStack {
-                                    Text(reservedTableNumber != nil ? "Edit Table Selection" : "Reserve A Table Now!")
-                                }
-                                .foregroundColor(.black)
-                                .padding(.vertical, 8)
-                                .padding(.horizontal, 12)
-                                .background(Color.white)
-                                .cornerRadius(8)
+                    VStack(spacing: 8) {
+                        Button(action: {
+                            showCalendar = true
+                        }) {
+                            HStack {
+                                Text(reservedTableNumber != nil ? "Edit Table Selection" : "Reserve A Table Now!")
                             }
-                            
-                            // Show reserved table info if table is booked
-                            if let tableNumber = reservedTableNumber, let date = reservedDate {
-                                VStack(spacing: 4) {
-                                    Text("Reserved: Table \(tableNumber)")
-                                        .font(.caption)
-                                        .foregroundColor(.green)
-                                        .bold()
-                                    Text("Date: \(date, format: .dateTime.weekday().month().day().year())")
-                                        .font(.caption)
-                                        .foregroundColor(.green)
-                                }
+                            .foregroundColor(.black)
+                            .padding(.vertical, 8)
+                            .padding(.horizontal, 12)
+                            .background(Color.white)
+                            .cornerRadius(8)
+                        }
+                        
+                        // Show reserved table info if table is booked
+                        if let tableNumber = reservedTableNumber, let date = reservedDate {
+                            VStack(spacing: 4) {
+                                Text("Reserved: Table \(tableNumber)")
+                                    .font(.caption)
+                                    .foregroundColor(.green)
+                                    .bold()
+                                Text("Date: \(date, format: .dateTime.weekday().month().day().year())")
+                                    .font(.caption)
+                                    .foregroundColor(.green)
                             }
                         }
                     }

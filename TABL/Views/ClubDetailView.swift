@@ -79,31 +79,32 @@ struct ClubDetailView: View {
                         .colorScheme(.dark)
                         .padding(.bottom)
                     
-                    Text("Table Reservation Link:")
-                        .bold()
-                        .foregroundColor(.white)
-                    HStack {
-                        TextField("https://example.com", text: $club.link)
-                            .padding()
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .stroke(Color.white, lineWidth: 1)
-                            )
-                            .background(Color.clear)
-                            .foregroundColor(.white)
-                            .colorScheme(.dark)
-                        
-                        if !club.link.isEmpty {
-                            Button(action: {
-                                openLink()
-                            }) {
-                                Image(systemName: "link")
-                                    .foregroundColor(.white)
-                                    .padding(.horizontal, 8)
-                            }
-                        }
-                    }
-                    .padding(.bottom)
+                    
+//                    Text("Table Reservation Link:")
+//                        .bold()
+//                        .foregroundColor(.white)
+//                    HStack {
+//                        TextField("https://example.com", text: $club.link)
+//                            .padding()
+//                            .overlay(
+//                                RoundedRectangle(cornerRadius: 8)
+//                                    .stroke(Color.white, lineWidth: 1)
+//                            )
+//                            .background(Color.clear)
+//                            .foregroundColor(.white)
+//                            .colorScheme(.dark)
+//                        
+//                        if !club.link.isEmpty {
+//                            Button(action: {
+//                                openLink()
+//                            }) {
+//                                Image(systemName: "link")
+//                                    .foregroundColor(.white)
+//                                    .padding(.horizontal, 8)
+//                            }
+//                        }
+//                    }
+//                    .padding(.bottom)
                     
                 }
                 ScrollView(.horizontal) {
