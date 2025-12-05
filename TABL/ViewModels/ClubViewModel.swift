@@ -33,4 +33,19 @@ static func saveClub(club: Club) async -> String? { // nil if effort failed, oth
             }
         }
     }
+    static func deleteClub(club: Club) {
+        let db = Firestore.firestore()
+        guard let id = club.id else {
+            print("Tried to delete a club with no id!")
+            return
+        }
+        Task {
+            do {
+                try await db.collection("clubs").document(id).delete()
+                print("🗑️ Successfully deleted!")
+            } catch {
+                print("😡 ERROR: Could not delete document \(id). \(error.localizedDescription)")
+            }
+        }
+    }
 }
