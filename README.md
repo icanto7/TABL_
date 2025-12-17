@@ -1,6 +1,6 @@
 # TABL - Nightclub Discovery App
 
-TABL is an iOS application designed for discovering and exploring nightclubs. The app provides users with detailed information about clubs, including photos, descriptions, locations, and reviews to help them find the perfect nightlife experience. [What demo here](https://www.youtube.com/watch?v=Rm0wdfqPO0Q)
+TABL is an iOS application designed for discovering and exploring nightclubs. The app provides users with detailed information about clubs, including photos, descriptions, locations, and reviews to help them find the perfect nightlife experience. [Whatch demo here](https://www.youtube.com/watch?v=Rm0wdfqPO0Q)
 
 ## Features - Main Branch
 
